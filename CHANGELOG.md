@@ -1,3 +1,20 @@
+## [2.0.0-mb.18] - 14/May/2022
+
+- Update packages for Flutter 3.0.0
+
+## [2.0.0-mb.17] - 28/Apr/2022
+
+- Add custom zoom buttons
+
+## [2.0.0-mb.16] - 21/Apr/2022
+
+- Add [FVM](https://fvm.app) config
+- Add `onMapTypeChanged` callback event
+
+## [2.0.0-mb.15] - 06/Mar/2022
+
+- Fix autocomplete search vertical offset in containers
+
 ## [2.0.0-mb.14] - 24/Feb/2022
 
 - Update geolocator
