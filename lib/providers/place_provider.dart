@@ -49,7 +49,6 @@ class PlaceProvider extends ChangeNotifier {
 
   Future<void> updateCurrentLocation(bool forceAndroidLocationManager) async {
     isLocationServiceEnabled = await location.serviceEnabled();
-
     if (!isLocationServiceEnabled) {
       isLocationServiceEnabled = await location.requestService();
       if (!isLocationServiceEnabled) {
@@ -69,14 +68,13 @@ class PlaceProvider extends ChangeNotifier {
       print(e);
       currentPosition = null;
     }
-
     notifyListeners();
   }
 
-  Position? _currentPoisition;
-  Position? get currentPosition => _currentPoisition;
+  Position? _currentPosition;
+  Position? get currentPosition => _currentPosition;
   set currentPosition(Position? newPosition) {
-    _currentPoisition = newPosition;
+    _currentPosition = newPosition;
     notifyListeners();
   }
 

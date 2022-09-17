@@ -22,6 +22,7 @@ typedef IntroModalWidgetBuilder = Widget Function(
 );
 
 enum PinState { Preparing, Idle, Dragging }
+
 enum SearchingState { Idle, Searching }
 
 class PlacePicker extends StatefulWidget {
@@ -110,8 +111,8 @@ class PlacePicker extends StatefulWidget {
   final bool? strictbounds;
   final String? region;
 
-  /// If set the picker can only pick addresses in the given circle area. 
-  /// The section will be highlighted. 
+  /// If set the picker can only pick addresses in the given circle area.
+  /// The section will be highlighted.
   final CircleArea? pickArea;
 
   /// If true the [body] and the scaffold's floating widgets should size
@@ -188,16 +189,16 @@ class PlacePicker extends StatefulWidget {
 
   final bool hidePlaceDetailsWhenDraggingPin;
 
-  // Raised when clicking on the back arrow. 
-  // This will not listen for the system back button on Android devices. 
-  // If this is not set, but the back button is visible through automaticallyImplyLeading, 
+  // Raised when clicking on the back arrow.
+  // This will not listen for the system back button on Android devices.
+  // If this is not set, but the back button is visible through automaticallyImplyLeading,
   // the Navigator will try to pop instead.
   final VoidCallback? onTapBack;
 
   /// GoogleMap pass-through events:
 
   /// Callback method for when the map is ready to be used.
-  /// 
+  ///
   /// Used to receive a [GoogleMapController] for this [GoogleMap].
   final MapCreatedCallback? onMapCreated;
 
@@ -229,17 +230,16 @@ class PlacePicker extends StatefulWidget {
   final bool zoomGesturesEnabled;
   final bool zoomControlsEnabled;
 
-
   @override
   _PlacePickerState createState() => _PlacePickerState();
 }
 
 class _PlacePickerState extends State<PlacePicker> {
   GlobalKey appBarKey = GlobalKey();
-  Future<PlaceProvider>? _futureProvider;
+  late final Future<PlaceProvider> _futureProvider;
   PlaceProvider? provider;
   SearchBarController searchBarController = SearchBarController();
-  bool showintroModal = true;
+  bool showIntroModal = true;
 
   @override
   void initState() {
@@ -266,7 +266,9 @@ class _PlacePickerState extends State<PlacePicker> {
     provider.sessionToken = Uuid().v4();
     provider.desiredAccuracy = widget.desiredLocationAccuracy;
     provider.setMapType(widget.initialMapType);
-
+    if (widget.useCurrentLocation != null && widget.useCurrentLocation!) {
+      await provider.updateCurrentLocation(widget.forceAndroidLocationManager);
+    }
     return provider;
   }
 
@@ -280,7 +282,9 @@ class _PlacePickerState extends State<PlacePicker> {
       child: FutureBuilder<PlaceProvider>(
         future: _futureProvider,
         builder: (context, snapshot) {
-          if (snapshot.hasData) {
+          if(snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasData) {
             provider = snapshot.data;
 
             return MultiProvider(
@@ -345,8 +349,9 @@ class _PlacePickerState extends State<PlacePicker> {
         widget.onTapBack != null
             ? IconButton(
                 onPressed: () {
-                  if(!showintroModal || widget.introModalWidgetBuilder == null) {
-                    if(widget.onTapBack != null) {
+                  if (!showIntroModal ||
+                      widget.introModalWidgetBuilder == null) {
+                    if (widget.onTapBack != null) {
                       widget.onTapBack!();
                       return;
                     }
@@ -438,36 +443,15 @@ class _PlacePickerState extends State<PlacePicker> {
   }
 
   Widget _buildMapWithLocation() {
-    if (widget.useCurrentLocation != null && widget.useCurrentLocation!) {
-      return FutureBuilder(
-          future: provider!.updateCurrentLocation(widget.forceAndroidLocationManager),
-          builder: (context, snap) {
-            if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else {
-              if (provider!.currentPosition == null) {
-                return _buildMap(widget.initialPosition);
-              } else {
-                return _buildMap(LatLng(provider!.currentPosition!.latitude, provider!.currentPosition!.longitude));
-              }
-            }
-          });
-    } else {
-      return FutureBuilder(
-        future: Future.delayed(Duration(milliseconds: 1)),
-        builder: (context, snap) {
-          if (snap.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else {
-            return _buildMap(widget.initialPosition);
-          }
-        },
-      );
+    if (provider!.currentPosition == null) {
+      return _buildMap(widget.initialPosition);
     }
+    return _buildMap(LatLng(provider!.currentPosition!.latitude, provider!.currentPosition!.longitude));
   }
 
   Widget _buildMap(LatLng initialTarget) {
     return GoogleMapPlacePicker(
+      fullMotion: !widget.resizeToAvoidBottomInset,
       initialTarget: initialTarget,
       appBarKey: appBarKey,
       selectedPlaceWidgetBuilder: widget.selectedPlaceWidgetBuilder,
@@ -517,8 +501,8 @@ class _PlacePickerState extends State<PlacePicker> {
 
   Widget _buildIntroModal(BuildContext context) {
     return StatefulBuilder(
-      builder: (BuildContext context, StateSetter setState) {
-        return showintroModal && widget.introModalWidgetBuilder != null
+        builder: (BuildContext context, StateSetter setState) {
+      return showIntroModal && widget.introModalWidgetBuilder != null
           ? Stack(children: [
             Positioned(
               top: 0,
@@ -529,14 +513,14 @@ class _PlacePickerState extends State<PlacePicker> {
                 type: MaterialType.canvas,
                 color: Color.fromARGB(128, 0, 0, 0),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero, 
+                    borderRadius: BorderRadius.zero,
                 ),
                 child: ClipRect(),
               ),
             ),
             widget.introModalWidgetBuilder!(context, () {
               setState(() {
-                showintroModal = false;
+                showIntroModal = false;
               });
             })
           ])

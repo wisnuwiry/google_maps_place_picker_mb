@@ -1,3 +1,14 @@
+## [2.0.0-mb.22] - 08/Aug/2022
+
+- Upgrade packages
+- Fix shadow clipping on AutoCompleteSearch
+- Streamline shadows
+- Prevent re-render of map when toggling the keyboard
+
+## [2.0.0-mb.21] - 31/Jul/2022
+
+- Upgrade geolocator
+
 ## [2.0.0-mb.20] - 06/Jun/2022
 
 - Revert previous changes and solve null-aware operation warning in a way that the package is warn-free for Flutter 2 and 3.
